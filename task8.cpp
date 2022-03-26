@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <cmath>
 #include <cstdio>
-#include <cstdlib>
 #include <iostream>
 #include "mpi.h"
 
@@ -9,7 +8,7 @@
 #define ARR_LENGTH 8
 
 int main(int argc, char **argv) {
-    srand(time(0));
+    srand(time(nullptr));
 
     int ProcNum;
     int ProcRank;

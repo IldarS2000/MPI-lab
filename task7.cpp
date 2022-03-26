@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <cmath>
 #include <cstdio>
-#include <cstdlib>
 #include <iostream>
 #include "mpi.h"
 
@@ -18,11 +17,10 @@ void rand_vec(T *vec, size_t size) {
     for (size_t i = 0; i < size; ++i) {
         vec[i] = rand() % radius + 1;
     }
-    return;
 }
 
 int main(int argc, char **argv) {
-    srand(time(0));
+    srand(time(nullptr));
     int lines = LINES, columns = COLUMNS;
 
     int ProcNum;
@@ -112,8 +110,8 @@ int main(int argc, char **argv) {
     MPI_Reduce(part_sum_vec, res_sum_vec, lines, MPI_INT, MPI_SUM, GENERAL_PROCCESS, MPI_COMM_WORLD);
 
     if (ProcRank == GENERAL_PROCCESS) {
-        printf("\nmatrix\n")
-        ж
+        printf("\nmatrix\n");
+
         for (int i = 0; i < lines; i++) {
             for (int j = 0; j < columns; ++j) {
                 printf("%d ", arr[i][j]);

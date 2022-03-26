@@ -1,10 +1,7 @@
 #include <cstdlib>
 #include <cmath>
-#include <cmath>
 #include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include "mpi.h"
+#include <mpi.h>
 
 using namespace std;
 
@@ -13,79 +10,68 @@ using namespace std;
 #define GENERAL_PROCCESS 0
 #define RANDOM_SPREAD_COEFFICIENT 3
 
-void RandomDataGeneration(double *pVector, int Size) {
-    int radius = ((int) Size * RANDOM_SPREAD_COEFFICIENT);
-    for (int i = 0; i < Size; i++) {
-        pVector[i] = rand() % radius - radius / 2;
-    }
-}
-
-double Multiplication(double *vector1, double *vector2, int size) {
-    double result = 0;
-    for (int i = 0; i < size; i++) {
-        result += vector1[i] * vector2[i];
-    }
-    return result;
-}
-
 
 int main(int argc, char **argv) {
-    srand(time(0));
-    int ProcRank = 0;
-    int ProcNum = 0;
-    double *pVector1; // first vector for multiply
-    double *pVector2; // second vector for multiply
-    double *procVector1; // part of first vector for parralel thread
-    double *procVector2; // part of second vector for parralel thread
-    double pResult = 0.0; // result of scalar multiply
-    double currentResult; // local result of scalar multiply for each thread
-    int Size; // size of vectors
-    int currentSize; // local size of vector for each thread
-    double startTime, endTime;
+    int rank, size;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &ProcNum);
-    MPI_Comm_rank(MPI_COMM_WORLD, &ProcRank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    Size = atoi(argv[1]);
+    //кол-во элементов для последнего процесса
 
-    if (ProcRank == GENERAL_PROCCESS) {
-        pVector1 = new double[Size];
-        pVector2 = new double[Size];
+    int arrLength = 100;
+    int partition = (int) round((double) arrLength / size);
 
-        RandomDataGeneration(pVector1, Size);
-        RandomDataGeneration(pVector2, Size);
+    if (arrLength % size != 0) {
+        if (rank == size - 1) partition = arrLength - partition * (size - 1);
     }
 
-    currentSize = Size / ProcNum;
-    //printf("curr size: %d\n", currentSize);
+    int *arr_1 = new int[arrLength];
+    int *arr_2 = new int[arrLength];
+    int *displs = new int[size];
+    int *sendcounts = new int[size];
+    int *buf_arr_1 = new int[partition];
+    int *buf_arr_2 = new int[partition];
 
-    procVector1 = new double[currentSize];
-    procVector2 = new double[currentSize];
+    // на руте генерируем массивы
+    if (rank == 0) {
 
-    startTime = MPI_Wtime();
+        for (int i = 0; i < arrLength; i++) {
+            arr_1[i] = rand() % 10;
+            arr_2[i] = rand() % 10;
+            printf("%d %d\n", arr_1[i], arr_2[i]);
+        }
 
-    MPI_Scatter(pVector1, currentSize, MPI_DOUBLE,
-                procVector1, currentSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Scatter(pVector2, currentSize, MPI_DOUBLE,
-                procVector2, currentSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        for (int i = 0; i < size; ++i) {
+            displs[i] = i * partition;
+            sendcounts[i] = partition;
+        }
 
-    currentResult = Multiplication(procVector1, procVector2, currentSize);
-    printf("local result:%f, thread %d\n", currentResult, ProcRank);
-    //fix proccess stdout not right time
-    //explicitly clear standard output
-    fflush(stdout);
-    MPI_Barrier(MPI_COMM_WORLD);
+        if (arrLength % size != 0) {
+            sendcounts[size - 1] = arrLength - partition * (size - 1);
+        }
+    }
 
-    MPI_Reduce(&currentResult, &pResult, 1,
-               MPI_DOUBLE, MPI_SUM, GENERAL_PROCCESS, MPI_COMM_WORLD);
+    // пересылаем каждому процессу его часть массивов
+    MPI_Scatterv(arr_1, sendcounts, displs, MPI_INT, buf_arr_1, partition, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(arr_2, sendcounts, displs, MPI_INT, buf_arr_2, partition, MPI_INT, 0, MPI_COMM_WORLD);
 
-    endTime = MPI_Wtime();
 
-    if (ProcRank == GENERAL_PROCCESS) {
-        printf("calculation result: %f\n", pResult);
-        printf("Size: %d ProcNum: %d time ms: %f Precision: %lf\n", Size,
-               ProcNum, SEC_TO_MS(endTime - startTime), MPI_Wtick());
+    long long int part_sum = 0;
+    long long int sum = 0;
+
+    // считаем сумму произведений между частями двух массивов
+    for (int i = 0; i < partition; i++) {
+        part_sum += (long int) (buf_arr_1[i] * buf_arr_2[i]);
+        printf("rank: %d, %d %d\n", rank, buf_arr_1[i], buf_arr_2[i]);
+    }
+
+    // собираем результат
+    MPI_Reduce(&part_sum, &sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        printf("scalar multiple: %lld", sum);
     }
 
     MPI_Finalize();

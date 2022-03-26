@@ -1,8 +1,6 @@
-#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
 #include "mpi.h"
 
 #define MAS_SIZE 100
@@ -15,13 +13,12 @@ void rand_vec(T *vec, size_t size) {
     for (size_t i = 0; i < size; ++i) {
         vec[i] = rand() % ((int) size * RANDOM_SPREAD_COEFFICIENT) + 1;
     }
-    return;
 }
 
 int main(int argc, char *argv[]) {
 
     int TotalMax = INT_MIN, LocalMax = INT_MIN;
-    srand(time(0));
+    srand(time(nullptr));
     int a[MAS_SIZE];
 
     int ProcNum;
@@ -76,6 +73,5 @@ int main(int argc, char *argv[]) {
     }
 
     MPI_Finalize();
-
     return 0;
 }

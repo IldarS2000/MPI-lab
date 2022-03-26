@@ -1,7 +1,5 @@
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
-#include <iostream>
 #include <ctime>
 #include "mpi.h"
 
@@ -17,12 +15,11 @@ void rand_vec(T *vec, size_t size) {
     for (size_t i = 0; i < size; ++i) {
         vec[i] = rand() % radius - radius / 2;
     }
-    return;
 }
 
 
 int main(int argc, char **argv) {
-    srand(time(0));
+    srand(time(nullptr));
     int ProcNum;
     int ProcRank;
 
@@ -66,7 +63,6 @@ int main(int argc, char **argv) {
     //data reductuion
     if (ProcRank == GENERAL_PROCCESS) {
         float global_avg = 0;
-        //MPI_Reduce(&local_avg, &global_avg, 1, MPI_FLOAT, MPI_SUM, GENERAL_PROCCESS, MPI_COMM_WORLD);
 
         for (int i = 0; i < ProcNum; i++)
             global_avg += final_res[i];

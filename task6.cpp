@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <cmath>
 #include <cstdio>
-#include <cstdlib>
 #include <iostream>
 #include "mpi.h"
 
