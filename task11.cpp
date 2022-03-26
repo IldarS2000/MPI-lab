@@ -39,7 +39,7 @@ void circle(int num, MPI_Comm comm) {
         flushing
     }
     if (procRank != GENERAL_PROCCESS) {
-        // each process get an number, add 5 and send next
+        // each process get an number, add 10 and send next
         MPI_Recv(recv, 1, MPI_INT, from_proc_id, procRank, comm, MPI_STATUSES_IGNORE);
         printf("Receive from_proc_id %d to_proc_id %d: %d\n", from_proc_id, procRank, *recv);
         flushing

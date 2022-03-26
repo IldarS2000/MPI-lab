@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 
     int chunk_size = mas_size / ProcNum;
 
-    //send to all threads data portion sizeof(chunk_size)
+    //send to all processes data portion sizeof(chunk_size)
     MPI_Scatter(&data, chunk_size, MPI_INT,
                 data_loc, chunk_size, MPI_INT, root, MPI_COMM_WORLD);
 
